@@ -7,7 +7,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/people")
+@RequestMapping("/persona")
 public class PersonaRestController {
 
     @Autowired

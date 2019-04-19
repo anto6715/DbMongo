@@ -11,7 +11,7 @@ public class Persona {
     private String nome;
     private String cognome;
     private int eta;
-    private String Indirizzo;
+    private String indirizzo;
     private String citta;
     private String provincia;
     private Date dob;
@@ -49,11 +49,11 @@ public class Persona {
     }
 
     public String getIndirizzo() {
-        return Indirizzo;
+        return indirizzo;
     }
 
     public void setIndirizzo(String indirizzo) {
-        Indirizzo = indirizzo;
+        indirizzo = indirizzo;
     }
 
     public String getCitta() {
