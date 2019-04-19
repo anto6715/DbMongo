@@ -1,5 +1,6 @@
 package it.unisalento.db.crud.DbMongo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
 
 import java.util.Date;
@@ -14,6 +15,7 @@ public class Persona {
     private String indirizzo;
     private String citta;
     private String provincia;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Europe/Rome")
     private Date dob;
 
     public String getId() {
@@ -53,7 +55,7 @@ public class Persona {
     }
 
     public void setIndirizzo(String indirizzo) {
-        indirizzo = indirizzo;
+        this.indirizzo = indirizzo;
     }
 
     public String getCitta() {
