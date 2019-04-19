@@ -12,7 +12,9 @@ sourceCompatibility = '1.8'
 repositories {
 	mavenCentral()
 }
-
+springBoot {
+	mainClassName = 'it.unisalento.db.crud.DbMongo.configurations.DbMongoApplication'
+}
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 	implementation 'org.springframework.boot:spring-boot-starter-web'

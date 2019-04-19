@@ -1,4 +1,4 @@
-package it.unisalento.db.crud.DbMongo;
+package it.unisalento.db.crud.DbMongo.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
