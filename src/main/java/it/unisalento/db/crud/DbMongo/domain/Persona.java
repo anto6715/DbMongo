@@ -11,7 +11,6 @@ public class Persona {
     private String id;
     private String nome;
     private String cognome;
-    private int eta;
     private String indirizzo;
     private String citta;
     private String provincia;
@@ -40,14 +39,6 @@ public class Persona {
 
     public void setCognome(String conome) {
         this.cognome = conome;
-    }
-
-    public int getEta() {
-        return eta;
-    }
-
-    public void setEta(int eta) {
-        this.eta = eta;
     }
 
     public String getIndirizzo() {
