@@ -55,7 +55,7 @@ public class Persona {
     }
 
     public void setIndirizzo(String indirizzo) {
-        indirizzo = indirizzo;
+        this.indirizzo = indirizzo;
     }
 
     public String getCitta() {
