@@ -39,7 +39,7 @@ public class PersonaRestController {
         return personaService.getById(id);
     }
 
-    @RequestMapping(value = "/deleteById/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public void delete(@PathVariable String id) {
         personaService.delete(id);
         return;

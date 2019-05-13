@@ -11,9 +11,9 @@ public class Persona {
     private String id;
     private String nome;
     private String cognome;
-    private String indirizzo;
-    private String citta;
-    private String provincia;
+    private String indirizzo="Unkown";
+    private String citta="Unkown";
+    private String provincia="Unkown";
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Europe/Rome")
     private Date dob;
 
