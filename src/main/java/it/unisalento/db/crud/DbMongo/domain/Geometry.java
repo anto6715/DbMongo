@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Geometry {
 
     @JsonProperty("type")
-    private String type;
+    private String type = "Point";
     @JsonProperty("coordinates")
     private List<Double> coordinates = null;
     @JsonIgnore
@@ -54,4 +54,10 @@ public class Geometry {
         this.additionalProperties.put(name, value);
     }
 
+    public Geometry(List<Double> coordinates) {
+        this.coordinates = coordinates;
+    }
+
+    public Geometry() {
+    }
 }

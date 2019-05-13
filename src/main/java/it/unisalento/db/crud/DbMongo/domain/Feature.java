@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Feature {
 
     @JsonProperty("type")
-    private String type;
+    private String type = "Feature";
     @JsonProperty("geometry")
     private Geometry geometry;
     @JsonProperty("properties")

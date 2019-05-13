@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class GeoJson {
 
     @JsonProperty("type")
-    private String type;
+    private String type="FeatureCollection";
     @JsonProperty("features")
     private List<Feature> features = null;
     @JsonIgnore

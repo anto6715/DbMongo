@@ -1,6 +1,7 @@
 package it.unisalento.db.crud.DbMongo.services;
 
 import it.unisalento.db.crud.DbMongo.domain.*;
+import it.unisalento.db.crud.DbMongo.models.GeoJsonConverter;
 import it.unisalento.db.crud.DbMongo.repository.TestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,47 +20,11 @@ public class TestService {
          return testRepository.findAll();
      }
 
-    @Transactional
-    public List<Test> getAllGeo() {
-
-        return testRepository.findAll();
-    }
 
     @Transactional
-    public GeoJson getGeo() {
-        GeoJson geo = new GeoJson();
-
-
-         List<Feature> features = new ArrayList<>();
-         for (Test test: testRepository.findAll()) {
-             List<Double> coordinates = new ArrayList<>();
-             Feature feature = new Feature();
-             Geometry geometry = new Geometry();
-             Properties properties = new Properties();
-             coordinates.add(test.getPosition().getLon());
-             coordinates.add(test.getPosition().getLat());
-
-             geometry.setType("Point");
-             geometry.setCoordinates(coordinates);
-
-             properties.setLeq(test.getMeasurement().getLeq());
-
-             feature.setGeometry(geometry);
-             feature.setType("Feature");
-             feature.setProperties(properties);
-
-             features.add(feature);
-
-
-
-         }
-
-
-
-        geo.setType("FeatureCollection");
-        geo.setFeatures(features);
-
-
+    public GeoJson getAllGeoJson(){
+        List<Test> tests = this.getAll();
+        GeoJson geo = GeoJsonConverter.getGeoJson(tests);
          return geo;
     }
 }

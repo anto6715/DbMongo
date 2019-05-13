@@ -40,4 +40,10 @@ public class Properties {
         this.additionalProperties.put(name, value);
     }
 
+    public Properties(Double leq) {
+        this.leq = leq;
+    }
+
+    public Properties() {
+    }
 }
