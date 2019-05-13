@@ -1,4 +1,4 @@
-package it.unisalento.db.crud.DbMongo;
+package it.unisalento.db.crud.DbMongo.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
@@ -11,10 +11,9 @@ public class Persona {
     private String id;
     private String nome;
     private String cognome;
-    private int eta;
-    private String indirizzo;
-    private String citta;
-    private String provincia;
+    private String indirizzo="Unkown";
+    private String citta="Unkown";
+    private String provincia="Unkown";
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Europe/Rome")
     private Date dob;
 
@@ -40,14 +39,6 @@ public class Persona {
 
     public void setCognome(String conome) {
         this.cognome = conome;
-    }
-
-    public int getEta() {
-        return eta;
-    }
-
-    public void setEta(int eta) {
-        this.eta = eta;
     }
 
     public String getIndirizzo() {

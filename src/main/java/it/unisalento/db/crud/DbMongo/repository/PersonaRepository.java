@@ -1,11 +1,10 @@
-package it.unisalento.db.crud.DbMongo;
+package it.unisalento.db.crud.DbMongo.repository;
 
+import it.unisalento.db.crud.DbMongo.domain.Persona;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
-
-import java.util.List;
-
-
+@Repository
 public interface PersonaRepository extends MongoRepository<Persona,String> {
 
     Persona getByNome(String nome);
