@@ -20,6 +20,7 @@ public class TestService {
 
      @Transactional
     public List<Test> getAll() {
+         Sort sort = Sort.by(Sort.Order.asc("position.lon"));
          return testRepository.findAll();
      }
 
@@ -35,8 +36,31 @@ public class TestService {
 
     @Transactional
     public GeoJson getAllGeoJson(){
+         HashMap map = new HashMap();
+
         List<Test> tests = this.getAll();
-        GeoJson geo = GeoJsonConverter.getGeoJson(tests);
+        for (Test test: tests){
+            String key = Double.toString(test.getPosition().getRoundedLat(1))+Double.toString(test.getPosition().getRoundedLon(1));
+            if (!map.containsKey(key)){
+                map.put(key,test);
+            } else {
+                Test t = (Test) map.get(key);
+                Measurement m = new Measurement();
+                Position p = new Position();
+                double avg = (t.getMeasurement().getLeq() + test.getMeasurement().getLeq())/2.0;
+                double avgLat = (t.getPosition().getLat() + test.getPosition().getLat())/2;
+                double avgLon = (t.getPosition().getLon() + test.getPosition().getLon())/2;
+                m.setLeq(avg);
+                p.setLat(avgLat);
+                p.setLon(avgLon);
+                t.setMeasurement(m);
+                t.setPosition(p);
+                map.put(key,t);
+            }
+        }
+        List<Test> ts = new ArrayList<Test>(map.values());
+        GeoJson geo = GeoJsonConverter.getGeoJson(ts);
+        System.out.println(map.size());
          return geo;
     }
 

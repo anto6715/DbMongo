@@ -1,4 +1,8 @@
 package it.unisalento.db.crud.DbMongo.domain;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class Test {
 
     private String id;
@@ -28,4 +32,6 @@ public class Test {
     public void setMeasurement(Measurement measurement) {
         this.measurement = measurement;
     }
+
+
 }
