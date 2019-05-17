@@ -27,4 +27,9 @@ public class TestRestController {
     public GeoJson getGeo() {
         return testService.getAllGeoJson();
     }
+
+    @RequestMapping(value = "/getGeoSquare", method = RequestMethod.GET)
+    public GeoJson getGeoSquare() {
+        return testService.getAllGeoJsonSqare();
+    }
 }
