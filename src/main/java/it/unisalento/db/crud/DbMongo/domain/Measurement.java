@@ -2,8 +2,8 @@ package it.unisalento.db.crud.DbMongo.domain;
 
 public class Measurement {
 
-    private double leq;
-    private double spl;
+    public double leq;
+    public double spl;
 
     public double getLeq() {
         return leq;

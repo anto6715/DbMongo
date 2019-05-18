@@ -2,7 +2,6 @@ package it.unisalento.db.crud.DbMongo.restapi;
 
 import it.unisalento.db.crud.DbMongo.domain.GeoJson;
 import it.unisalento.db.crud.DbMongo.domain.Test;
-import it.unisalento.db.crud.DbMongo.repository.TestRepository;
 import it.unisalento.db.crud.DbMongo.services.TestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +27,18 @@ public class TestRestController {
         return testService.getAllGeoJson();
     }
 
-    @RequestMapping(value = "/getGeoSquare", method = RequestMethod.GET)
+    @RequestMapping(value = "/getJongo", method = RequestMethod.GET)
+    public GeoJson getJongo() {
+        return testService.getJongo();
+    }
+
+    @RequestMapping(value = "/getMorphia", method = RequestMethod.GET)
+    public void getMorphia() {
+        testService.getMorphia();
+    }
+
+   /* @RequestMapping(value = "/getGeoSquare", method = RequestMethod.GET)
     public GeoJson getGeoSquare() {
         return testService.getAllGeoJsonSqare();
-    }
+    }*/
 }

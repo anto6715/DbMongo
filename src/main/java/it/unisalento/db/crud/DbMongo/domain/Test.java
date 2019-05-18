@@ -1,13 +1,21 @@
 package it.unisalento.db.crud.DbMongo.domain;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import org.jongo.marshall.jackson.oid.MongoId;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+@Entity("test")
 public class Test {
 
-    private String id;
-    private Position position = new Position();
-    private Measurement measurement = new Measurement();
+    @Id
+    public String id;
+    public Position position = new Position();
+    public Measurement measurement = new Measurement();
 
     public String getId() {
         return id;

@@ -1,28 +1,105 @@
 package it.unisalento.db.crud.DbMongo.services;
 
+import com.mongodb.MongoClient;
+import com.mongodb.DB;
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
+import dev.morphia.query.Query;
 import it.unisalento.db.crud.DbMongo.domain.*;
 import it.unisalento.db.crud.DbMongo.models.GeoJsonConverter;
 import it.unisalento.db.crud.DbMongo.repository.TestRepository;
+import org.jongo.Jongo;
+import org.jongo.MongoCollection;
+import org.jongo.MongoCursor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 import static java.lang.Math.min;
-import static java.lang.Math.sqrt;
 
 @Service
 public class TestService {
     @Autowired
     TestRepository testRepository;
 
-     @Transactional
+    @Autowired
+    MongoTemplate mongoTemplate;
+
+    @Transactional
     public List<Test> getAll() {
          Sort sort = Sort.by(Sort.Order.asc("position.lon"));
-         return testRepository.findAll();
-     }
+         return  mongoTemplate.findAll(Test.class);
+         //return testRepository.findAll();
+    }
+
+    public GeoJson getJongo() {
+        DB db = new MongoClient().getDB("demo");
+        Jongo jongo = new Jongo(db);
+        Date startGetAll = new Date();
+        MongoCollection tests = jongo.getCollection("test");
+        MongoCursor<Test> all = tests.find().as(Test.class);
+
+        Iterator<Test> iterator = all.iterator();
+        List<Test> tests1 = new ArrayList<Test>();
+        while (iterator.hasNext()) {
+            tests1.add(iterator.next());
+        }
+        HashMap map = new HashMap();
+        Date endGetAll = new Date();
+        for (Test test: tests1){
+            //Test test = iterator.next();
+            String key = Double.toString(test.getPosition().getRoundedLat(0))+Double.toString(test.getPosition().getRoundedLon(0));
+            if (!map.containsKey(key)){
+                TestAvg avg = new TestAvg(test);
+                map.put(key,avg);
+            } else {
+                TestAvg avg = (TestAvg) map.get(key);
+                avg.addTest(test);
+
+                /*Measurement m = new Measurement();
+                Position p = new Position();
+                double avg = (t.getMeasurement().getLeq() + test.getMeasurement().getLeq())/2.0;
+                double avgLat = (t.getPosition().getLat() + test.getPosition().getLat())/2;
+                double avgLon = (t.getPosition().getLon() + test.getPosition().getLon())/2;
+                m.setLeq(avg);
+                p.setLat(avgLat);
+                p.setLon(avgLon);
+                t.setMeasurement(m);
+                t.setPosition(p);*/
+                map.put(key,avg);
+            }
+        }
+        Date endAgglomeration = new Date();
+        List<TestAvg> ts = new ArrayList<TestAvg>(map.values());
+        GeoJson geo = GeoJsonConverter.getGeoJson(ts);
+        Date endGeo = new Date();
+        System.out.println(map.size());
+        System.out.println("Start request: "+ startGetAll);
+        System.out.println("End request and start agglomeration: " + endGetAll);
+        System.out.println("End agglomeration and start convertion: " + endAgglomeration);
+        System.out.println("End conversion: " + endGeo);
+        return geo;
+    }
+
+    public void getMorphia() {
+        final Morphia morphia = new Morphia();
+        morphia.map(Test.class);
+
+        morphia.mapPackage("it.unisalento.db.crud.DbMongo.domain");
+        final Datastore datastore = morphia.createDatastore(new MongoClient(), "demo");
+        //datastore.ensureIndexes();
+
+        /*final Query<Test> query = datastore.createQuery(Test.class);
+        final List<Test> tests = query.asList();
+        System.out.println(tests.size());*/
+        final Query<Test> query = datastore.find(Test.class);
+        List<Test> list= query.find().toList();
+
+    }
 
     @Transactional
     public List<Test> getAllSquare(double latMin, double lonMin, double latMax, double lonMax) {
@@ -36,16 +113,22 @@ public class TestService {
 
     @Transactional
     public GeoJson getAllGeoJson(){
-         HashMap map = new HashMap();
-
+        HashMap map = new HashMap();
+        Date startGetAll = new Date();
         List<Test> tests = this.getAll();
+        Date endGetAll = new Date();
+
+
         for (Test test: tests){
-            String key = Double.toString(test.getPosition().getRoundedLat(1))+Double.toString(test.getPosition().getRoundedLon(1));
+            String key = Double.toString(test.getPosition().getRoundedLat(0))+Double.toString(test.getPosition().getRoundedLon(0));
             if (!map.containsKey(key)){
-                map.put(key,test);
+                TestAvg avg = new TestAvg(test);
+                map.put(key,avg);
             } else {
-                Test t = (Test) map.get(key);
-                Measurement m = new Measurement();
+                TestAvg avg = (TestAvg) map.get(key);
+                avg.addTest(test);
+
+                /*Measurement m = new Measurement();
                 Position p = new Position();
                 double avg = (t.getMeasurement().getLeq() + test.getMeasurement().getLeq())/2.0;
                 double avgLat = (t.getPosition().getLat() + test.getPosition().getLat())/2;
@@ -54,17 +137,23 @@ public class TestService {
                 p.setLat(avgLat);
                 p.setLon(avgLon);
                 t.setMeasurement(m);
-                t.setPosition(p);
-                map.put(key,t);
+                t.setPosition(p);*/
+                map.put(key,avg);
             }
         }
-        List<Test> ts = new ArrayList<Test>(map.values());
+        Date endAgglomeration = new Date();
+        List<TestAvg> ts = new ArrayList<TestAvg>(map.values());
         GeoJson geo = GeoJsonConverter.getGeoJson(ts);
+        Date endGeo = new Date();
         System.out.println(map.size());
+        System.out.println("Start request: "+ startGetAll);
+        System.out.println("End request and start agglomeration: " + endGetAll);
+        System.out.println("End agglomeration and start convertion: " + endAgglomeration);
+        System.out.println("End conversion: " + endGeo);
          return geo;
     }
 
-    @Transactional
+    /*@Transactional
     public GeoJson getAllGeoJsonSqare(){
 
         double min_lat =  35.63827;
@@ -141,7 +230,7 @@ public class TestService {
         }
         */
 
-        GeoJson geo = GeoJsonConverter.getGeoJson(ridotti);
+        /*GeoJson geo = GeoJsonConverter.getGeoJson(ridotti);
         return geo;
-    }
+    }*/
 }

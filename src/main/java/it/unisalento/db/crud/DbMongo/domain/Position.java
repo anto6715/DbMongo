@@ -5,8 +5,8 @@ import java.math.RoundingMode;
 
 public class Position {
 
-    private double lat;
-    private double lon;
+    public double lat;
+    public double lon;
 
     public double getRoundedLat(int r) {
         return round(lat,r);
