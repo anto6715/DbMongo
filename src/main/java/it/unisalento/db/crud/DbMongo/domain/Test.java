@@ -1,15 +1,10 @@
 package it.unisalento.db.crud.DbMongo.domain;
 
 import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Id;
-import org.jongo.marshall.jackson.oid.MongoId;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
-@Entity("test")
+@Document(collection = "test")
 public class Test {
 
     @Id

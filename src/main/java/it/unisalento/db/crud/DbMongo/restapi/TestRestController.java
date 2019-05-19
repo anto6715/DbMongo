@@ -18,17 +18,17 @@ public class TestRestController {
     TestService testService;
 
     @RequestMapping(value = "/getAll", method = RequestMethod.GET)
-    public List<Test> getAll() {
+    public List<Test> getAll() throws InterruptedException {
         return testService.getAll();
     }
 
-    @RequestMapping(value = "/getGeo", method = RequestMethod.GET)
+    /*@RequestMapping(value = "/getGeo", method = RequestMethod.GET)
     public GeoJson getGeo() {
         return testService.getAllGeoJson();
-    }
+    }*/
 
     @RequestMapping(value = "/getJongo", method = RequestMethod.GET)
-    public GeoJson getJongo() {
+    public GeoJson getJongo() throws InterruptedException {
         return testService.getJongo();
     }
 
@@ -37,7 +37,7 @@ public class TestRestController {
         testService.getMorphia();
     }
 
-   /* @RequestMapping(value = "/getGeoSquare", method = RequestMethod.GET)
+  /* @RequestMapping(value = "/getGeoSquare", method = RequestMethod.GET)
     public GeoJson getGeoSquare() {
         return testService.getAllGeoJsonSqare();
     }*/
