@@ -40,12 +40,34 @@ public class TestService {
     }
 
     public GeoJson getJongo( double minLon, double minLat, double maxLon, double maxLat, int zoom) throws InterruptedException {
-        TestThread thread1 = new TestThread(minLon, minLat, maxLon, maxLat, zoom);
+        List<TestThread> threads = new ArrayList<>();
+        List<TestAvg> list = new ArrayList<>();
+        int n_threads=8;
+        double interval = (maxLon-minLon)/n_threads;
+        for (int i = 0; i<n_threads; i++) {
+            for (int j = 0; j<n_threads; j++) {
+                
+            }
+            double minlon = minLon+i*interval+0.0000000000001;
+            double maxlon =minLon+(i+1)*interval;
+            TestThread thread = new TestThread( minlon, minLat, maxlon, maxLat, zoom, i);
+            thread.setPriority(10);
+            thread.start();
+            threads.add(thread);
+        }
+        for (int i = 0; i<n_threads; i++) {
+            threads.get(i).join();
+            list.addAll(threads.get(i).getTs());
+        }
+        /*TestThread thread1 = new TestThread(minLon, minLat, maxLon/2, maxLat, zoom);
+        TestThread thread2 = new TestThread(maxLon/2+0.0000000000001, minLat, maxLon, maxLat, zoom);
+        TestThread all = new TestThread(minLon, minLat, maxLon, maxLat, zoom);
 
-
-        thread1.start();
-        thread1.join();
-        return thread1.getGeo();
+        all.start();
+        all.join();*/
+        System.out.println("Lista compattata:" + list.size());
+        GeoJson geoJson  = GeoJsonConverter.getGeoJson(list);
+        return geoJson;
     }
 
     public void getMorphia() {
@@ -99,24 +121,27 @@ class TestThread extends Thread {
     double maxLon;
     double maxLat;
     int zoom;
+    List<TestAvg> ts;
+    int id;
 
-    public TestThread(double minLon, double minLat, double maxLon, double maxLat, int zoom) {
+    public TestThread(double minLon, double minLat, double maxLon, double maxLat, int zoom, int id) {
         this.minLon = minLon;
         this.minLat = minLat;
         this.maxLon = maxLon;
         this.maxLat = maxLat;
         this.zoom = zoom;
+        this.id = id;
     }
 
-    public GeoJson getGeo() {
-        return geo;
+    public List<TestAvg> getTs() {
+        return ts;
     }
 
     public GeoJson getJongo() {
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
         Date startGetAll = new Date();
-        MongoCollection tests = jongo.getCollection("test");
+        MongoCollection tests = jongo.getCollection("prova");
         Iterator<Test> it = tests.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}},{allowDiskUse: false}").as(Test.class).iterator();
         MongoCursor<Test> all = tests.find().as(Test.class);
 
@@ -125,13 +150,13 @@ class TestThread extends Thread {
         while (it.hasNext()) {
             tests1.add(it.next());
         }
-        System.out.println(tests1.size());
+        System.out.println(this.id+"dal db:"+tests1.size());
         HashMap map = new HashMap();
         Date endGetAll = new Date();
         for (Test test: tests1){
             //Test test = iterator.next();
-            double normLat = Tools.round((test.getPosition().getLat()-minLat)/(maxLat-minLat)*1,2);
-            double normLon = Tools.round((test.getPosition().getLon()-minLon)/(maxLon-minLon)*1,2);
+            double normLat = Tools.round((test.getPosition().getLat()-minLat)/(maxLat-minLat)*0.005,5);
+            double normLon = Tools.round((test.getPosition().getLon()-minLon)/(maxLon-minLon)*0.005,5);
             String key = Double.toString(normLat)+Double.toString(normLon);
             //System.out.println(key);
             if (!map.containsKey(key)){
@@ -145,19 +170,20 @@ class TestThread extends Thread {
             }
         };
         Date endAgglomeration = new Date();
-        List<TestAvg> ts = new ArrayList<TestAvg>(map.values());
-        geo = GeoJsonConverter.getGeoJson(ts);
-        Date endGeo = new Date();
-        System.out.println(map.size());
+        ts = new ArrayList<TestAvg>(map.values());
+        System.out.println(this.id + "compattati in:" +map.size());
+        /*Date endGeo = new Date();
+
         System.out.println("Start request: "+ startGetAll);
         System.out.println("End request and start agglomeration: " + endGetAll);
         System.out.println("End agglomeration and start convertion: " + endAgglomeration);
-        System.out.println("End conversion: " + endGeo);
+        System.out.println("End conversion: " + endGeo);*/
         return geo;
     }
 
 
     public void run() {
+        System.out.println("avvio thread");
         this.getJongo();
     }
 }

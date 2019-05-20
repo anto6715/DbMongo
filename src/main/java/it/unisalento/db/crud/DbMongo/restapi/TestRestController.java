@@ -34,7 +34,6 @@ public class TestRestController {
                             @PathVariable("maxLon") double maxLon,
                             @PathVariable("maxLat") double maxLat,
                             @PathVariable("zoom") int zoom) throws InterruptedException {
-        System.out.println(maxLat);
         return testService.getJongo(minLon, minLat, maxLon, maxLat, zoom);
     }
 
