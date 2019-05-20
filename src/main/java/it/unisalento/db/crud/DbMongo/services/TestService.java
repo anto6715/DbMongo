@@ -6,6 +6,7 @@ import dev.morphia.Morphia;
 import dev.morphia.query.Query;
 import it.unisalento.db.crud.DbMongo.domain.*;
 import it.unisalento.db.crud.DbMongo.models.GeoJsonConverter;
+import it.unisalento.db.crud.DbMongo.models.Tools;
 import it.unisalento.db.crud.DbMongo.repository.TestRepository;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
@@ -38,14 +39,12 @@ public class TestService {
         return list1;
     }
 
-    public GeoJson getJongo() throws InterruptedException {
-        TestThread thread1 = new TestThread();
-        TestThread thread2 = new TestThread();
+    public GeoJson getJongo( double minLon, double minLat, double maxLon, double maxLat, int zoom) throws InterruptedException {
+        TestThread thread1 = new TestThread(minLon, minLat, maxLon, maxLat, zoom);
+
+
         thread1.start();
-        System.out.println("ciao");
-        //thread2.start();
         thread1.join();
-        //thread2.join();
         return thread1.getGeo();
     }
 
@@ -95,16 +94,30 @@ public class TestService {
 
 class TestThread extends Thread {
     GeoJson geo = new GeoJson();
+    double minLon;
+    double minLat;
+    double maxLon;
+    double maxLat;
+    int zoom;
+
+    public TestThread(double minLon, double minLat, double maxLon, double maxLat, int zoom) {
+        this.minLon = minLon;
+        this.minLat = minLat;
+        this.maxLon = maxLon;
+        this.maxLat = maxLat;
+        this.zoom = zoom;
+    }
+
     public GeoJson getGeo() {
         return geo;
     }
 
-    public GeoJson getJongo(double latMin, double lonMin, double latMax, double lonMax) {
+    public GeoJson getJongo() {
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
         Date startGetAll = new Date();
         MongoCollection tests = jongo.getCollection("test");
-        Iterator<Test> it = tests.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+latMin+","+lonMin+"],["+latMax+",+"+lonMax+"]]}}}},{allowDiskUse: false}").as(Test.class).iterator();
+        Iterator<Test> it = tests.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}},{allowDiskUse: false}").as(Test.class).iterator();
         MongoCursor<Test> all = tests.find().as(Test.class);
 
         Iterator<Test> iterator = all.iterator();
@@ -117,16 +130,20 @@ class TestThread extends Thread {
         Date endGetAll = new Date();
         for (Test test: tests1){
             //Test test = iterator.next();
-            String key = Double.toString(test.getPosition().getRoundedLat(2))+Double.toString(test.getPosition().getRoundedLon(2));
+            double normLat = Tools.round((test.getPosition().getLat()-minLat)/(maxLat-minLat)*1,2);
+            double normLon = Tools.round((test.getPosition().getLon()-minLon)/(maxLon-minLon)*1,2);
+            String key = Double.toString(normLat)+Double.toString(normLon);
+            //System.out.println(key);
             if (!map.containsKey(key)){
                 TestAvg avg = new TestAvg(test);
                 map.put(key,avg);
+                //System.out.println(key);
             } else {
                 TestAvg avg = (TestAvg) map.get(key);
                 avg.addTest(test);
                 map.put(key,avg);
             }
-        }
+        };
         Date endAgglomeration = new Date();
         List<TestAvg> ts = new ArrayList<TestAvg>(map.values());
         geo = GeoJsonConverter.getGeoJson(ts);
@@ -141,6 +158,6 @@ class TestThread extends Thread {
 
 
     public void run() {
-        this.getJongo(39.7, 15, 40.8, 17);
+        this.getJongo();
     }
 }
