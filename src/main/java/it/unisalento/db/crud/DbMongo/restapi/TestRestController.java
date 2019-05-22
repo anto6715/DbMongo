@@ -23,11 +23,6 @@ public class TestRestController {
         return testService.getAll();
     }
 
-    /*@RequestMapping(value = "/getGeo", method = RequestMethod.GET)
-    public GeoJson getGeo() {
-        return testService.getAllGeoJson();
-    }*/
-
     @RequestMapping(value = "/getJongo/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}", method = RequestMethod.GET)
     public GeoJson getJongo(@PathVariable("minLon") double minLon,
                             @PathVariable("minLat") double minLat,
@@ -42,9 +37,4 @@ public class TestRestController {
     public void getMorphia() {
         testService.getMorphia();
     }
-
-  /* @RequestMapping(value = "/getGeoSquare", method = RequestMethod.GET)
-    public GeoJson getGeoSquare() {
-        return testService.getAllGeoJsonSqare();
-    }*/
 }

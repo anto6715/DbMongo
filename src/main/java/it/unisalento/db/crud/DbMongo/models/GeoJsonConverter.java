@@ -11,14 +11,14 @@ public class GeoJsonConverter {
 
 
 
-    public static GeoJson getGeoJson(List<TestAvg> tests) {
+    public static GeoJson getGeoJson(List<Test> tests) {
         GeoJson geoJson = new GeoJson();
         List<Feature> features = new ArrayList<>();
         Feature feature;
         Geometry geometry;
         Properties properties;
 
-        for (TestAvg test: tests) {
+        for (Test test: tests) {
             List<Double> coordinates = new ArrayList<>();
             feature = new Feature();
             geometry = new Geometry();

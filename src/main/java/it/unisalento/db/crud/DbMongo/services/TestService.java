@@ -1,6 +1,5 @@
 package it.unisalento.db.crud.DbMongo.services;
 
-import com.jsoniter.JsonIterator;
 import com.mongodb.*;
 import dev.morphia.Datastore;
 import dev.morphia.Morphia;
@@ -11,42 +10,35 @@ import it.unisalento.db.crud.DbMongo.models.Tools;
 import it.unisalento.db.crud.DbMongo.repository.TestRepository;
 import org.jongo.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import static java.lang.Math.min;
 
 
 @Service
 public class TestService {
-    static List<Test> list1 = new ArrayList<>();
-    static List<Test> list2 = new ArrayList<>();
     @Autowired
     TestRepository testRepository;
 
-    @Autowired
-    MongoTemplate mongoTemplate;
 
     @Transactional
-    public List<Test> getAll() throws InterruptedException {
+    public List<Test> getAll() {
 
-        return list1;
+        return testRepository.findAll();
     }
 
     public GeoJson getJongo( double minLon, double minLat, double maxLon, double maxLat, int zoom) throws InterruptedException {
         List<TestThread> threads = new ArrayList<>();
-        List<TestAvg> list = new ArrayList<>();
-        int n_threads=2;
+        List<Test> list = new ArrayList<>();
+        int n_threads=8;
         double interval = (maxLon-minLon)/n_threads;
         for (int i = 0; i<n_threads; i++) {
             double minlon = minLon+i*interval+0.0000000000001;
             double maxlon =minLon+(i+1)*interval;
             TestThread thread = new TestThread( minlon, minLat, maxlon, maxLat, zoom, i);
-            thread.setPriority(10);
             thread.start();
             threads.add(thread);
         }
@@ -55,8 +47,7 @@ public class TestService {
             list.addAll(threads.get(i).getTs());
         }
         System.out.println("Lista compattata:" + list.size());
-        GeoJson geoJson  = GeoJsonConverter.getGeoJson(list);
-        return geoJson;
+        return GeoJsonConverter.getGeoJson(list);
     }
 
     public void getMorphia() {
@@ -75,68 +66,20 @@ public class TestService {
 
     }
 
-    @Transactional
-    public List<Test> getAllSquare(double latMin, double lonMin, double latMax, double lonMax) {
-        return testRepository.findAllBySquare(latMin, lonMin, latMax, lonMax);
-    }
-
-    @Transactional
-    public List<Test> getAllSorted(Sort sort) {
-        return testRepository.findAll(sort);
-    }
-
-    public GeoJson prova(double minLon, double minLat, double maxLon, double maxLat, int zoom) {
-        DB db = new MongoClient().getDB("demo");
-        Jongo jongo = new Jongo(db);
-        Date startGetAll = new Date();
-        MongoCollection tests = jongo.getCollection("test");
-        int count = 0;
-
-        Aggregate.ResultsIterator<Test> all = tests.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}},{allowDiskUse: false}").map(new ResultHandler<Test>() {
-            @Override
-            public Test map(DBObject result) {
-
-                Position p = new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon"));
-                Measurement m = new Measurement();
-                m.setLeq((Double) ((DBObject) result.get("measurement")).get("leq"));
-                Test t = new Test(result.get("_id").toString(), p, m);
-                return t;
-            }
-        });
-        /*MongoCursor<Test> all = tests.find().map(new ResultHandler<Test>() {
-        @Override
-            public Test map(DBObject result) {
-
-                Position p = new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon"));
-                Measurement m = new Measurement();
-                m.setLeq((Double) ((DBObject) result.get("measurement")).get("leq"));
-                Test t = new Test(result.get("_id").toString(), p, m);
-                return t;
-            }
-        });*/
-        while (all.hasNext()) {
-            list1.add(all.next());
-            //System.out.println(all.next());
-        }
-        System.out.println(list1.size());
-        return new GeoJson();
-    }
-
-
-
-
 }
 
 
 class TestThread extends Thread {
-    GeoJson geo = new GeoJson();
-    double minLon;
-    double minLat;
-    double maxLon;
-    double maxLat;
-    int zoom;
-    List<TestAvg> ts;
-    int id;
+    private double minLon;
+    private double minLat;
+    private double maxLon;
+    private double maxLat;
+    private double intervalLat;
+    private double intervalLon;
+    private int zoom;
+    private int id;
+    private List<Test> ts;
+
 
     public TestThread(double minLon, double minLat, double maxLon, double maxLat, int zoom, int id) {
         this.minLon = minLon;
@@ -145,58 +88,37 @@ class TestThread extends Thread {
         this.maxLat = maxLat;
         this.zoom = zoom;
         this.id = id;
+        this.intervalLat = maxLat - minLat;
+        this.intervalLon = maxLon - minLon;
     }
 
-    public List<TestAvg> getTs() {
+    public List<Test> getTs() {
         return ts;
     }
 
-    public GeoJson getJongo() {
+    public void getJongo() {
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
-        Date startGetAll = new Date();
-        MongoCollection tests = jongo.getCollection("test");
-        //Iterator<Test> it = tests.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}},{allowDiskUse: false}").as(Test.class).iterator();
-        //MongoCursor<Test> all = tests.find().as(Test.class);
+        MongoCollection collection = jongo.getCollection("prova");
 
-        //Iterator<Test> iterator = all.iterator();
-        Aggregate.ResultsIterator<Test> it = tests.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}},{allowDiskUse: false}").map(new ResultHandler<Test>() {
-            @Override
-            public Test map(DBObject result) {
-                Position p = new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon"));
-                Measurement m = new Measurement((Double) ((DBObject) result.get("measurement")).get("leq"));
-                Test t = new Test(result.get("_id").toString(), p, m);
-                return t;
-            }
+        Aggregate.ResultsIterator<Test> iterator = collection.aggregate("{$match: { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}},{allowDiskUse: false}").map(result -> {
+            Test t = new Test(result.get("_id").toString(),
+                    new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
+                    new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
+            return t;
         });
-
-        List<Test> tests1 = new ArrayList<Test>();
-        while (it.hasNext()) {
-            tests1.add(it.next());
-        }
-        System.out.println(this.id+"dal db:"+tests1.size());
-        HashMap map = new HashMap();
-        Date endGetAll = new Date();
-        for (Test test: tests1){
-            //Test test = iterator.next();
-            double normLat = Tools.round((test.getPosition().getLat()-minLat)/(maxLat-minLat)*0.5,2);
-            double normLon = Tools.round((test.getPosition().getLon()-minLon)/(maxLon-minLon)*0.5,2);
-            String key = Double.toString(normLat)+Double.toString(normLon);
-            //System.out.println(key);
+        HashMap<String, Test> map = new HashMap();
+        while (iterator.hasNext()){
+            Test test = iterator.next();
+            String key = Double.toString(Tools.round((test.getPosition().getLat()-minLat)/(intervalLat)*0.01/zoom,5))+Double.toString(Tools.round((test.getPosition().getLon()-minLon)/(intervalLon)*0.01/zoom,5));
             if (!map.containsKey(key)){
-                TestAvg avg = new TestAvg(test);
-                map.put(key,avg);
-                //System.out.println(key);
+                map.put(key,test);
             } else {
-                TestAvg avg = (TestAvg) map.get(key);
-                avg.addTest(test);
-                map.put(key,avg);
+                test.addTest(map.get(key));
+                map.put(key,test);
             }
-        };
-        Date endAgglomeration = new Date();
-        ts = new ArrayList<TestAvg>(map.values());
-        System.out.println(this.id + "compattati in:" +map.size());
-        return geo;
+        }
+        ts = new ArrayList<>(map.values());
     }
 
 

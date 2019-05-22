@@ -17,6 +17,9 @@ public class Test {
         this.position = p;
         this.measurement = m;
     }
+    public Test() {
+
+    }
 
     public String getId() {
         return id;
@@ -40,6 +43,13 @@ public class Test {
 
     public void setMeasurement(Measurement measurement) {
         this.measurement = measurement;
+    }
+
+    public Test addTest(Test test) {
+        this.position.setLon((test.getPosition().getLon()+this.position.getLon())/2);
+        this.position.setLat((test.getPosition().getLat() + this.position.getLat())/2);
+        this.measurement.setLeq((test.getMeasurement().getLeq() + this.measurement.getLeq())/2);
+    return this;
     }
 
 
