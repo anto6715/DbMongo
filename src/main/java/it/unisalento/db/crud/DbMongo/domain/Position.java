@@ -39,4 +39,12 @@ public class Position {
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
+
+    public Position(double lat, double lon) {
+        this.lat = lat;
+        this.lon = lon;
+    }
+
+    public Position() {
+    }
 }

@@ -12,6 +12,12 @@ public class Test {
     public Position position = new Position();
     public Measurement measurement = new Measurement();
 
+    public Test(String id, Position p, Measurement m) {
+        this.id = id;
+        this.position = p;
+        this.measurement = m;
+    }
+
     public String getId() {
         return id;
     }

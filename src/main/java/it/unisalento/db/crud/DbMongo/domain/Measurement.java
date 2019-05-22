@@ -5,6 +5,13 @@ public class Measurement {
     public double leq;
     public double spl;
 
+    public Measurement(Double leq) {
+        this.leq = leq;
+    }
+
+    public Measurement() {
+    }
+
     public double getLeq() {
         return leq;
     }
