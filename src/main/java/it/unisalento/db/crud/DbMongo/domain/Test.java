@@ -11,6 +11,7 @@ public class Test {
     public String id;
     public Position position = new Position();
     public Measurement measurement = new Measurement();
+    private double count =1.0;
 
     public Test(String id, Position p, Measurement m) {
         this.id = id;
@@ -30,6 +31,8 @@ public class Test {
     }
 
     public Position getPosition() {
+        position.setLon(position.getLon()/count);
+        position.setLat(position.getLat()/count);
         return position;
     }
 
@@ -38,6 +41,7 @@ public class Test {
     }
 
     public Measurement getMeasurement() {
+        measurement.setLeq(measurement.getLeq()/count);
         return measurement;
     }
 
@@ -49,6 +53,7 @@ public class Test {
         this.position.setLon((test.getPosition().getLon()+this.position.getLon())/2);
         this.position.setLat((test.getPosition().getLat() + this.position.getLat())/2);
         this.measurement.setLeq((test.getMeasurement().getLeq() + this.measurement.getLeq())/2);
+        count +=1.0;
     return this;
     }
 

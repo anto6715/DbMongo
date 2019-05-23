@@ -26,7 +26,7 @@ public class TestRestController {
         return testService.getAll();
     }
 
-    @RequestMapping(value = "/getJongo/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}", method = RequestMethod.GET)
+    @RequestMapping(value = "/getJongoOld/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}", method = RequestMethod.GET)
     public GeoJson getJongo(@PathVariable("minLon") double minLon,
                             @PathVariable("minLat") double minLat,
                             @PathVariable("maxLon") double maxLon,

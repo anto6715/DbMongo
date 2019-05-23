@@ -127,7 +127,8 @@ class TestThread extends Thread {
         Date date_end = context.executeDateStrategy(year, month, day+1);
 
         MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}, measureTimestamp.date : {$gte: #, $lt: # }},{allowDiskUse: false}", date_start,date_end).map(result -> {
-            Test t = new Test(result.get("_id").toString(),
+        //MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}},{allowDiskUse: false}").map(result -> {
+        Test t = new Test(result.get("_id").toString(),
                     new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
                     new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
             return t;
@@ -136,7 +137,7 @@ class TestThread extends Thread {
         while (iterator.hasNext()){
             count +=1;
             Test test = iterator.next();
-            String key = Double.toString(Tools.round((test.getPosition().getLat()-minLat)/(intervalLat)*0.04/zoom,5))+Double.toString(Tools.round((test.getPosition().getLon()-minLon)/(intervalLon)*0.04/zoom,5));
+            String key = Double.toString(Tools.round((test.getPosition().getLat()-minLat)/(intervalLat)*0.04/(zoom*2),6))+Double.toString(Tools.round((test.getPosition().getLon()-minLon)/(intervalLon)*0.04/(zoom*2),6));
             if (!map.containsKey(key)){
                 map.put(key,test);
             } else {
