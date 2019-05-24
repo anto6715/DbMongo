@@ -26,17 +26,10 @@ public class TestRestController {
         return testService.getAll();
     }
 
-    @RequestMapping(value = "/getJongoOld/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}", method = RequestMethod.GET)
-    public GeoJson getJongo(@PathVariable("minLon") double minLon,
-                            @PathVariable("minLat") double minLat,
-                            @PathVariable("maxLon") double maxLon,
-                            @PathVariable("maxLat") double maxLat,
-                            @PathVariable("zoom") int zoom,
-                            @PathVariable("year") int year,
-                            @PathVariable("month") int month,
-                            @PathVariable("day") int day) throws InterruptedException {
+    @RequestMapping(value = "/prova", method = RequestMethod.GET)
+    public GeoJson prova() throws InterruptedException {
         //return testService.prova(minLon, minLat, maxLon, maxLat, zoom);
-        return testService.getJongo(minLon, minLat, maxLon, maxLat, zoom, year, month, day);
+        return testService.createLevel();
     }
 
     @RequestMapping(value = "/getJongo/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}/{year}/{month}/{day}", method = RequestMethod.GET)
@@ -48,12 +41,24 @@ public class TestRestController {
                             @PathVariable("year") int year,
                             @PathVariable("month") int month,
                             @PathVariable("day") int day) throws InterruptedException {
-        //return testService.prova(minLon, minLat, maxLon, maxLat, zoom);
-        return testService.getJongo(minLon, minLat, maxLon, maxLat, zoom, year, month, day);
+        if (zoom > 12) {
+            return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day);
+        }
+        else return new GeoJson();
     }
 
-    @RequestMapping(value = "/getMorphia", method = RequestMethod.GET)
-    public void getMorphia() {
-        testService.getMorphia();
+    @RequestMapping(value = "/getRealData/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}/{year}/{month}/{day}", method = RequestMethod.GET)
+    public GeoJson getRealData(@PathVariable("minLon") double minLon,
+                                @PathVariable("minLat") double minLat,
+                                @PathVariable("maxLon") double maxLon,
+                                @PathVariable("maxLat") double maxLat,
+                                @PathVariable("zoom") int zoom,
+                                @PathVariable("year") int year,
+                                @PathVariable("month") int month,
+                                @PathVariable("day") int day) throws InterruptedException {
+        return testService.getRealTimeData(minLon, minLat, maxLon, maxLat, zoom, year, month, day);
+
     }
+
+
 }

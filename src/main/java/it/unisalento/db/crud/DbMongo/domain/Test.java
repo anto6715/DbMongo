@@ -50,9 +50,9 @@ public class Test {
     }
 
     public Test addTest(Test test) {
-        this.position.setLon((test.getPosition().getLon()+this.position.getLon())/2);
-        this.position.setLat((test.getPosition().getLat() + this.position.getLat())/2);
-        this.measurement.setLeq((test.getMeasurement().getLeq() + this.measurement.getLeq())/2);
+        this.position.setLon((test.getPosition().getLon()+this.position.getLon()));
+        this.position.setLat((test.getPosition().getLat() + this.position.getLat()));
+        this.measurement.setLeq((test.getMeasurement().getLeq() + this.measurement.getLeq()));
         count +=1.0;
     return this;
     }

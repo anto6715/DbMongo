@@ -1,9 +1,6 @@
 package it.unisalento.db.crud.DbMongo.services;
 
 import com.mongodb.*;
-import dev.morphia.Datastore;
-import dev.morphia.Morphia;
-import dev.morphia.query.Query;
 import it.unisalento.db.crud.DbMongo.domain.*;
 import it.unisalento.db.crud.DbMongo.models.GeoJsonConverter;
 import it.unisalento.db.crud.DbMongo.models.StrategyPattern.Context;
@@ -12,16 +9,9 @@ import it.unisalento.db.crud.DbMongo.models.Tools;
 import it.unisalento.db.crud.DbMongo.repository.TestRepository;
 import org.jongo.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-
 
 @Service
 public class TestService {
@@ -35,7 +25,31 @@ public class TestService {
         return testRepository.findAll();
     }
 
-    public GeoJson getJongo( double minLon, double minLat, double maxLon, double maxLat, int zoom, int year, int month, int day) throws InterruptedException {
+    public GeoJson getData(double minLon, double minLat, double maxLon, double maxLat, int zoom, int year, int month, int day) {
+        List<Test> tests = new ArrayList<>();
+        DB db = new MongoClient().getDB("demo");
+        Jongo jongo = new Jongo(db);
+        MongoCollection collection = jongo.getCollection("prova2");
+        Context context = new Context(new DateStrategyImpl());
+        Date date_start = context.executeDateStrategy(year, month, day);
+        Date date_end = context.executeDateStrategy(year, month, day+1);
+
+        MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}, measureTimestamp.date : {$gte: #, $lt: # }},{allowDiskUse: false}", date_start,date_end).map(result -> {
+            //MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}},{allowDiskUse: false}").map(result -> {
+            Test t = new Test(result.get("_id").toString(),
+                    new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
+                    new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
+            return t;
+        });
+        while (iterator.hasNext()){
+            Test t = iterator.next();
+            tests.add(t);
+        }
+        System.out.println("Dati ottenuti: " + tests.size());
+        return GeoJsonConverter.getGeoJson(tests);
+    }
+
+    public GeoJson getRealTimeData( double minLon, double minLat, double maxLon, double maxLat, int zoom, int year, int month, int day) throws InterruptedException {
         List<TestThread> threads = new ArrayList<>();
         List<Test> list = new ArrayList<>();
         int totalList=0;
@@ -58,20 +72,33 @@ public class TestService {
         return GeoJsonConverter.getGeoJson(list);
     }
 
-    public void getMorphia() {
-        final Morphia morphia = new Morphia();
-        morphia.map(Test.class);
 
-        morphia.mapPackage("it.unisalento.db.crud.DbMongo.domain");
-        final Datastore datastore = morphia.createDatastore(new MongoClient(), "demo");
-        //datastore.ensureIndexes();
 
-        /*final Query<Test> query = datastore.createQuery(Test.class);
-        final List<Test> tests = query.asList();
-        System.out.println(tests.size());*/
-        final Query<Test> query = datastore.find(Test.class);
-        List<Test> list= query.find().toList();
+    public GeoJson createLevel() {
+        int approx = 1000;
+        List<Test> tests = new ArrayList<>();
+        DB db = new MongoClient().getDB("demo");
+        Jongo jongo = new Jongo(db);
+        MongoCollection collection = jongo.getCollection("demo");
 
+        Context context = new Context(new DateStrategyImpl());
+        Date date_start = context.executeDateStrategy(2019, 5, 24);
+        Date date_end = context.executeDateStrategy(2019, 5, 24+1);
+
+        Iterator<Test> it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
+                .and("{ $project : {lon: { $divide: [{ $trunc: { $multiply: ['$position.lon', "+approx+"]} }, "+approx+"]},lat: {$divide: [{$trunc: {$multiply: ['$position.lat', "+approx+"]}}, "+approx+"] },leq: '$measurement.leq'}}")
+                .and("{$project : {_id: { $concat: [ { $toString: '$lon' } , '_' , { $toString: '$lat' } ] }, lon: 1,lat: 1, leq: 1}}")
+                .and("{$group : {_id: '$_id', lon: { $avg: '$lon' },lat: { $avg: '$lat' }, leq: { $avg: '$leq' }}}")
+                .and("{$project : {id: '$_id',position: {lon: '$lon',lat: '$lat'},measurement: {leq: '$leq' }}}")
+                .and("{$out: 'prova2'}").options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class).iterator();
+        int count = 0;
+        while (it.hasNext()) {
+            tests.add(it.next());
+            count += 1;
+        }
+
+        System.out.println(count);
+        return new GeoJson();
     }
 
 }
@@ -116,10 +143,10 @@ class TestThread extends Thread {
         return count;
     }
 
-    public void getJongo() {
+    public void getData() {
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
-        MongoCollection collection = jongo.getCollection("prova");
+        MongoCollection collection = jongo.getCollection("demo");
 
         // Uso del patter Strategy per creare la data secondo il formato corretto
         Context context = new Context(new DateStrategyImpl());
@@ -151,6 +178,6 @@ class TestThread extends Thread {
 
     public void run() {
         System.out.println("avvio thread");
-        this.getJongo();
+        this.getData();
     }
 }
