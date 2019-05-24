@@ -8,7 +8,7 @@ import java.util.TimeZone;
 public class DateStrategyImpl implements DateStrategy {
     @Override
     public Date getDate(int year, int month, int day) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"), Locale.ITALY);
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ITALY);
         calendar.set(year, month-1,day,0,0,0);
         Date date = calendar.getTime();
         return date;

@@ -29,13 +29,13 @@ public class TestService {
         List<Test> tests = new ArrayList<>();
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
-        MongoCollection collection = jongo.getCollection("prova2");
+        MongoCollection collection = jongo.getCollection("level");
         Context context = new Context(new DateStrategyImpl());
         Date date_start = context.executeDateStrategy(year, month, day);
         Date date_end = context.executeDateStrategy(year, month, day+1);
 
-        MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}, measureTimestamp.date : {$gte: #, $lt: # }},{allowDiskUse: false}", date_start,date_end).map(result -> {
-            //MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}},{allowDiskUse: false}").map(result -> {
+        //MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}, measureTimestamp.date : {$gte: #, $lt: # }},{allowDiskUse: false}", date_start,date_end).map(result -> {
+            MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}},{allowDiskUse: false}").map(result -> {
             Test t = new Test(result.get("_id").toString(),
                     new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
                     new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
@@ -84,13 +84,14 @@ public class TestService {
         Context context = new Context(new DateStrategyImpl());
         Date date_start = context.executeDateStrategy(2019, 5, 24);
         Date date_end = context.executeDateStrategy(2019, 5, 24+1);
+        System.out.println(date_start);
 
         Iterator<Test> it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
                 .and("{ $project : {lon: { $divide: [{ $trunc: { $multiply: ['$position.lon', "+approx+"]} }, "+approx+"]},lat: {$divide: [{$trunc: {$multiply: ['$position.lat', "+approx+"]}}, "+approx+"] },leq: '$measurement.leq'}}")
                 .and("{$project : {_id: { $concat: [ { $toString: '$lon' } , '_' , { $toString: '$lat' } ] }, lon: 1,lat: 1, leq: 1}}")
                 .and("{$group : {_id: '$_id', lon: { $avg: '$lon' },lat: { $avg: '$lat' }, leq: { $avg: '$leq' }}}")
-                .and("{$project : {id: '$_id',position: {lon: '$lon',lat: '$lat'},measurement: {leq: '$leq' }}}")
-                .and("{$out: 'prova2'}").options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class).iterator();
+                .and("{$project : {position: {lat: '$lat', lon: '$lon'},measurement: {leq: '$leq' },measureTimestamp: {date: #}}}", date_start)
+                .and("{$out: 'level'}").options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class).iterator();
         int count = 0;
         while (it.hasNext()) {
             tests.add(it.next());
