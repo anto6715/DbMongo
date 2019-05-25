@@ -19,33 +19,22 @@ import java.util.*;
 public class TestService {
     @Autowired
     TestRepository testRepository;
-    Calendar cal = Calendar.getInstance();
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+    DB db = new MongoClient().getDB("demo");
+    Jongo jongo = new Jongo(db);
 
-    @Transactional
-    public List<Test> getAll() {
 
-        return testRepository.findAll();
-    }
-
-    public GeoJson getData(double minLon, double minLat, double maxLon, double maxLat, int zoom, int year, int month, int day, String collectionName) {
+    public GeoJson getData(double minLon, double minLat, double maxLon, double maxLat,  String collectionName) {
         List<Test> tests = new ArrayList<>();
-        DB db = new MongoClient().getDB("demo");
-        Jongo jongo = new Jongo(db);
-        MongoCollection collection = jongo.getCollection(collectionName);
-        Context context = new Context(new DateStrategyImpl());
-        Date date_start = context.executeDateStrategy(year, month, day);
-        Date date_end = context.executeDateStrategy(year, month, day+1);
-        System.out.println(date_start);
-        System.out.println(date_end);
 
-        MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}, measureTimestamp.date : {$gte: #, $lt: # }},{allowDiskUse: false}", context.executeDateStrategy(year, month, day),context.executeDateStrategy(year, month, day+1)).map(result -> {
-            //MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}},{allowDiskUse: false}").map(result -> {
-            Test t = new Test(result.get("_id").toString(),
-                    new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
-                    new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
-            return t;
-        });
+        MongoCollection collection = jongo.getCollection(collectionName);
+        MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}}")
+                .map(result -> {
+                    Test t =new Test(result.get("_id").toString(),
+                            new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
+                            new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
+                    return t;
+                });
+
         while (iterator.hasNext()){
             Test t = iterator.next();
             tests.add(t);
@@ -78,73 +67,6 @@ public class TestService {
     }
 
 
-
-    public GeoJson getDayLevel(int zoom, int year, int month, int day) {
-        List<Test> tests = new ArrayList<>();
-        DB db = new MongoClient().getDB("demo");
-        Jongo jongo = new Jongo(db);
-        String collectionName =  year + "-" + month + "-" + day + "_zoom_" + zoom;
-        MongoCollection collection = jongo.getCollection(collectionName);
-
-        Iterator<Test> it = collection.find().as(Test.class).iterator();
-        while (it.hasNext()) {
-            tests.add(it.next());
-        }
-        return GeoJsonConverter.getGeoJson(tests);
-    }
-
-
-
-
-    public void createDayLevels() {
-
-        Context context = new Context(new DateStrategyImpl());
-        Date date_start = context.executeDateStrategy(2019, 5, 24);
-        Date date_end = context.executeDateStrategy(2019, 5, 24+1);
-        int zoom = 8;
-        int approx = 70;
-        for (int i = 0; i<1; i++){
-            String collectionName =  2019 + "-" + "0"+5 + "-" + 24 + "_zoom_" + zoom;
-            createLevel(date_start,date_end,approx,zoom, collectionName);
-            approx *= 10;
-            zoom += 2;
-        }
-    }
-
-    private Date getDate(int day) {
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        cal.add(Calendar.DATE, day); //0 today, -1 yesterday..
-        return cal.getTime();
-    }
-
-    public void createLevel(Date date_start, Date date_end, int approx, int zoom, String collectionName) {
-        List<Test> tests = new ArrayList<>();
-        DB db = new MongoClient().getDB("demo");
-        Jongo jongo = new Jongo(db);
-        MongoCollection collection = jongo.getCollection(2019 + "-" + "0"+5 + "-" + 24 + "_zoom_" + 14);
-
-
-        System.out.println(format.format(date_end));
-
-        Iterator<Test> it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
-                .and("{ $project : {lon_a: { $divide: [{ $trunc: { $multiply: ['$position.lon', "+approx+"]} }, "+approx+"]},lat_a: {$divide: [{$trunc: {$multiply: ['$position.lat', "+approx+"]}}, "+approx+"] }, lon : '$position.lon', lat: '$position.lat', leq: '$measurement.leq'}}")
-                .and("{$project : {_id: { $concat: [ { $toString: '$lon_a' } , '_' , { $toString: '$lat_a' } ] }, lon: 1,lat: 1, leq: 1}}")
-                .and("{$group : {_id: '$_id', lon: { $avg: '$lon' },lat: { $avg: '$lat' }, leq: { $avg: '$leq' }}}")
-                .and("{$project : {position: {lat: '$lat', lon: '$lon'},measurement: {leq: '$leq' },measureTimestamp: {date: #}}}", date_start)
-                .and("{$out: #}",collectionName).options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class).iterator();
-        int count = 0;
-        while (it.hasNext()) {
-            //tests.add(it.next());
-            it.next();
-            count += 1;
-        }
-
-        System.out.println("zoom: " + zoom + " punti: " + count);
-        //return new GeoJson();
-    }
 
 }
 

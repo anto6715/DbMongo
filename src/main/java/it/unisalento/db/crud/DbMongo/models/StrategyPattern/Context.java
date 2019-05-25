@@ -13,6 +13,12 @@ public class Context {
     public Date executeDateStrategy(int year, int month, int day) {
         return dateStrategy.getDate(year, month, day);
     }
+    public Date executeDateStrategy(int day) {
+        return dateStrategy.getDate(day);
+    }
+    public String executeDateStrategy(Date date) {
+        return dateStrategy.getFormatDate(date);
+    }
     public void changeStrategy(DateStrategy dateStrategy) {
         this.dateStrategy = dateStrategy;
     }
