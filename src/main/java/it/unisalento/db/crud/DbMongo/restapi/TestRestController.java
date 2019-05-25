@@ -52,10 +52,32 @@ public class TestRestController {
                             @PathVariable("year") int year,
                             @PathVariable("month") int month,
                             @PathVariable("day") int day) throws InterruptedException {
-        if (zoom > 12) {
-            return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day);
-        }
-        else return new GeoJson();
+        if (zoom == 16 || zoom == 17) {
+            System.out.println(1);
+            return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day, "demo");
+        } else
+            if (zoom == 14 || zoom == 15) {
+                System.out.println(2);
+                String collectionName =  year + "-" + "0"+month + "-" + day + "_zoom_" + 14;
+                return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day, collectionName);
+            } else
+                if (zoom == 12 || zoom == 13) {
+                    System.out.println(3);
+                    String collectionName =  year + "-" + "0"+month + "-" + day + "_zoom_" + 12;
+                    return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day, collectionName);
+                }
+                else
+                    if (zoom == 10 || zoom == 11) {
+                        System.out.println(4);
+                        String collectionName =  year + "-" + "0"+month + "-" + day + "_zoom_" + 10;
+                        return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day, collectionName);
+                    } else
+                        if (zoom == 8 || zoom == 9) {
+                            System.out.println(5);
+                            String collectionName =  year + "-" + "0"+month + "-" + day + "_zoom_" + 8;
+                            return testService.getData(minLon, minLat, maxLon, maxLat, zoom, year, month, day, collectionName);
+                        } else return new GeoJson();
+
     }
 
     @RequestMapping(value = "/getRealData/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}/{year}/{month}/{day}", method = RequestMethod.GET)
