@@ -29,7 +29,18 @@ public class TestRestController {
     @RequestMapping(value = "/prova", method = RequestMethod.GET)
     public GeoJson prova() throws InterruptedException {
         //return testService.prova(minLon, minLat, maxLon, maxLat, zoom);
-        return testService.createLevel();
+        //return testService.createLevel();
+        testService.createDayLevels();
+        return null;
+    }
+
+    @RequestMapping(value = "/getDayLevel/{zoom}/{year}/{month}/{day}", method = RequestMethod.GET)
+    public GeoJson getDayLevel(    @PathVariable("zoom") int zoom,
+                                   @PathVariable("year") int year,
+                                   @PathVariable("month") int month,
+                                   @PathVariable("day") int day) throws InterruptedException {
+        testService.getDayLevel(zoom, year, month, day);
+        return null;
     }
 
     @RequestMapping(value = "/getJongo/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}/{year}/{month}/{day}", method = RequestMethod.GET)

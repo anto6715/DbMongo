@@ -11,13 +11,16 @@ import org.jongo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
 public class TestService {
     @Autowired
     TestRepository testRepository;
-
+    Calendar cal = Calendar.getInstance();
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     @Transactional
     public List<Test> getAll() {
@@ -72,34 +75,69 @@ public class TestService {
         return GeoJsonConverter.getGeoJson(list);
     }
 
+    public GeoJson getDayLevel(int zoom, int year, int month, int day) {
+        List<Test> tests = new ArrayList<>();
+        DB db = new MongoClient().getDB("demo");
+        Jongo jongo = new Jongo(db);
+        String collectionName =  year + "-" + month + "-" + day + "_zoom_" + zoom;
+        MongoCollection collection = jongo.getCollection(collectionName);
 
+        Iterator<Test> it = collection.find().as(Test.class).iterator();
+        while (it.hasNext()) {
+            tests.add(it.next());
+        }
+        return GeoJsonConverter.getGeoJson(tests);
+    }
 
-    public GeoJson createLevel() {
-        int approx = 1000;
+    public void createDayLevels() {
+        Date today = getDate(0);
+        Date yesterday = getDate(-1);
+        int zoom = 3;
+        int approx = 10;
+        for (int i = 0; i<7; i++){
+            createLevel(yesterday,today,approx,zoom);
+            approx *= 10;
+            zoom += 2;
+        }
+    }
+
+    private Date getDate(int day) {
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.DATE, day); //0 today, -1 yesterday..
+        return cal.getTime();
+    }
+
+    public void createLevel(Date date_start, Date date_end, int approx, int zoom) {
         List<Test> tests = new ArrayList<>();
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
         MongoCollection collection = jongo.getCollection("demo");
 
         Context context = new Context(new DateStrategyImpl());
-        Date date_start = context.executeDateStrategy(2019, 5, 24);
-        Date date_end = context.executeDateStrategy(2019, 5, 24+1);
-        System.out.println(date_start);
+        //Date date_start = context.executeDateStrategy(2019, 5, 24);
+        //Date date_end = context.executeDateStrategy(2019, 5, 24+1);
+        System.out.println(format.format(date_end));
+        String collectionName = format.format(date_end) + "_zoom_" + zoom;
 
         Iterator<Test> it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
                 .and("{ $project : {lon: { $divide: [{ $trunc: { $multiply: ['$position.lon', "+approx+"]} }, "+approx+"]},lat: {$divide: [{$trunc: {$multiply: ['$position.lat', "+approx+"]}}, "+approx+"] },leq: '$measurement.leq'}}")
                 .and("{$project : {_id: { $concat: [ { $toString: '$lon' } , '_' , { $toString: '$lat' } ] }, lon: 1,lat: 1, leq: 1}}")
                 .and("{$group : {_id: '$_id', lon: { $avg: '$lon' },lat: { $avg: '$lat' }, leq: { $avg: '$leq' }}}")
                 .and("{$project : {position: {lat: '$lat', lon: '$lon'},measurement: {leq: '$leq' },measureTimestamp: {date: #}}}", date_start)
-                .and("{$out: 'level'}").options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class).iterator();
+                .and("{$out: #}",collectionName).options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class).iterator();
+        System.out.println("Esce");
         int count = 0;
         while (it.hasNext()) {
-            tests.add(it.next());
+            //tests.add(it.next());
+            it.next();
             count += 1;
         }
 
-        System.out.println(count);
-        return new GeoJson();
+        System.out.println("zoom: " + zoom + " punti: " + count);
+        //return new GeoJson();
     }
 
 }
