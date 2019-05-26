@@ -13,13 +13,35 @@ import java.util.*;
 
 public class ScheduleLevels implements Runnable {
 
+    Date date_start;
+    Date date_end;
+    public Integer year = null;
+    public Integer month = null;
+    public Integer day = null;
+    Context context = new Context(new DateStrategyImpl());
+
+    public ScheduleLevels(Integer year, Integer month, Integer day) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+    }
+
+    public ScheduleLevels() {
+    }
+
+    private void createDate() {
+        if (year == null || month == null || day == null) {
+            date_start = context.executeDateStrategy(-1);
+            date_end = context.executeDateStrategy(0);
+        } else {
+            date_start = context.executeDateStrategy(year, month, day);
+            date_end = context.executeDateStrategy(year, month, day+1);
+        }
+    }
+
     public void createDayLevels() {
 
-        Context context = new Context(new DateStrategyImpl());
-        Date date_start = context.executeDateStrategy(-1);
-        Date date_end = context.executeDateStrategy(0);
         String dateFormat = context.executeDateStrategy(date_start);
-
         int zoom = 4;
         List<Integer> approsimations = Tools.getAgglomerationValue();
         for (int i = 0; i<7; i++){
@@ -62,6 +84,7 @@ public class ScheduleLevels implements Runnable {
     @Override
     public void run() {
         System.out.println("Start creation levels...");
+        this.createDate();
         this.createDayLevels();
         System.out.println("...end");
     }

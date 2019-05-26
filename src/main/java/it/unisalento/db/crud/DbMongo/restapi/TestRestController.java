@@ -44,6 +44,14 @@ public class TestRestController {
         runnable.run();
         return null;
     }
+    @RequestMapping(value = "/createLevels/{year}/{month}/{day}", method = RequestMethod.GET)
+    public GeoJson createLevelsDate(@PathVariable("year") int year,
+                                    @PathVariable("month") int month,
+                                    @PathVariable("day") int day) throws InterruptedException {
+        Runnable runnable = new ScheduleLevels(year, month, day);
+        runnable.run();
+        return null;
+    }
 
     @RequestMapping(value = "/getJongo/{minLon}/{minLat}/{maxLon}/{maxLat}/{zoom}/{year}/{month}/{day}", method = RequestMethod.GET)
     public GeoJson getJongoDate(@PathVariable("minLon") double minLon,
