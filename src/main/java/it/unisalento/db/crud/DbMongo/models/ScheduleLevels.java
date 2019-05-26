@@ -15,28 +15,16 @@ public class ScheduleLevels implements Runnable {
 
     Date date_start;
     Date date_end;
-    public Integer year = null;
-    public Integer month = null;
-    public Integer day = null;
     Context context = new Context(new DateStrategyImpl());
 
     public ScheduleLevels(Integer year, Integer month, Integer day) {
-        this.year = year;
-        this.month = month;
-        this.day = day;
+        date_start = context.executeDateStrategy(year, month, day);
+        date_end = context.executeDateStrategy(year, month, day+1);
     }
 
     public ScheduleLevels() {
-    }
-
-    private void createDate() {
-        if (year == null || month == null || day == null) {
-            date_start = context.executeDateStrategy(-1);
-            date_end = context.executeDateStrategy(0);
-        } else {
-            date_start = context.executeDateStrategy(year, month, day);
-            date_end = context.executeDateStrategy(year, month, day+1);
-        }
+        date_start = context.executeDateStrategy(-1);
+        date_end = context.executeDateStrategy(0);
     }
 
     public void createDayLevels() {
@@ -84,7 +72,6 @@ public class ScheduleLevels implements Runnable {
     @Override
     public void run() {
         System.out.println("Start creation levels...");
-        this.createDate();
         this.createDayLevels();
         System.out.println("...end");
     }
