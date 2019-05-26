@@ -30,6 +30,14 @@ public class TestRestController {
     @Autowired
     TestService testService;
 
+
+    @RequestMapping(value = "/prova", method = RequestMethod.GET)
+    public GeoJson prova() throws InterruptedException {
+        Context context = new Context(new DateStrategyImpl());
+        System.out.println(context.executeDateStrategy(2019,5,30));
+        return null;
+    }
+
     @RequestMapping(value = "/createLevels", method = RequestMethod.GET)
     public GeoJson createLevels() throws InterruptedException {
         Runnable runnable = new ScheduleLevels();

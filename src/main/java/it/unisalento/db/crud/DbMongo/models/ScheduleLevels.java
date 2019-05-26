@@ -37,9 +37,6 @@ public class ScheduleLevels implements Runnable {
         MongoCollection collection = jongo.getCollection("demo");
         Iterator<Test> it;
 
-
-
-
         if (zoom != 16) {
              it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
                 .and("{ $project : {lon_a: { $divide: [{ $trunc: { $multiply: ['$position.lon', "+approx+"]} }, "+approx+"]},lat_a: {$divide: [{$trunc: {$multiply: ['$position.lat', "+approx+"]}}, "+approx+"] }, lon : '$position.lon', lat: '$position.lat', leq: '$measurement.leq'}}")
