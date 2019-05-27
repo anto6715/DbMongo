@@ -1,21 +1,26 @@
 package it.unisalento.db.crud.DbMongo.domain;
 
 import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Id;
-import org.jongo.marshall.jackson.oid.MongoId;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
-@Entity("test")
+@Document(collection = "prova")
 public class Test {
 
     @Id
     public String id;
     public Position position = new Position();
     public Measurement measurement = new Measurement();
+    private double count =1.0;
+
+    public Test(String id, Position p, Measurement m) {
+        this.id = id;
+        this.position = p;
+        this.measurement = m;
+    }
+    public Test() {
+
+    }
 
     public String getId() {
         return id;
@@ -26,6 +31,8 @@ public class Test {
     }
 
     public Position getPosition() {
+        position.setLon(position.getLon()/count);
+        position.setLat(position.getLat()/count);
         return position;
     }
 
@@ -34,11 +41,20 @@ public class Test {
     }
 
     public Measurement getMeasurement() {
+        measurement.setLeq(measurement.getLeq()/count);
         return measurement;
     }
 
     public void setMeasurement(Measurement measurement) {
         this.measurement = measurement;
+    }
+
+    public Test addTest(Test test) {
+        this.position.setLon((test.getPosition().getLon()+this.position.getLon()));
+        this.position.setLat((test.getPosition().getLat() + this.position.getLat()));
+        this.measurement.setLeq((test.getMeasurement().getLeq() + this.measurement.getLeq()));
+        count +=1.0;
+    return this;
     }
 
 

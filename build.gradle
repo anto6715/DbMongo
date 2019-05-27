@@ -26,6 +26,8 @@ dependencies {
 	compile group: 'org.jongo', name: 'jongo', version: '1.4.0'
 	compile 'de.undercouch:bson4jackson:2.9.2'
 	compile 'dev.morphia.morphia:core:1.5.2'
+	compile group: 'com.jsoniter', name: 'jsoniter', version: '0.9.19'
+
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
