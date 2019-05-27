@@ -115,13 +115,11 @@ class TestThread extends Thread {
         Jongo jongo = new Jongo(db);
         MongoCollection collection = jongo.getCollection("demo");
 
-        // Uso del patter Strategy per creare la data secondo il formato corretto
         Context context = new Context(new DateStrategyImpl());
-        Date date_start = context.executeDateStrategy(year, month, day);
-        Date date_end = context.executeDateStrategy(year, month, day+1);
+        Date date_start = context.executeDateStrategy(0);
+        Date date_end = context.executeDateStrategy(1);
 
         MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}, measureTimestamp.date : {$gte: #, $lt: # }},{allowDiskUse: false}", date_start,date_end).map(result -> {
-        //MongoCursor<Test> iterator = collection.find(" { position: { $geoWithin: { $box: [ [ "+minLat+","+minLon+"],["+maxLat+",+"+maxLon+"]]}}},{allowDiskUse: false}").map(result -> {
         Test t = new Test(result.get("_id").toString(),
                     new Position((Double) ((DBObject) result.get("position")).get("lat"),(Double) ((DBObject) result.get("position")).get("lon")),
                     new Measurement((Double) ((DBObject) result.get("measurement")).get("leq")));
