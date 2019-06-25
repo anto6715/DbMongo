@@ -10,7 +10,7 @@ import java.util.List;
 public class GeoJsonConverter {
 
 
-
+    // restituisce un oggetto GeoJson partendo da una lista di Test
     public static GeoJson getGeoJson(List<Test> tests) {
         GeoJson geoJson = new GeoJson();
         List<Feature> features = new ArrayList<>();
@@ -43,13 +43,5 @@ public class GeoJsonConverter {
         //geoJson.setType("FeatureCollection");
         geoJson.setFeatures(features);
         return geoJson;
-    }
-
-    private static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-
-        BigDecimal bd = new BigDecimal(Double.toString(value));
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
-        return bd.doubleValue();
     }
 }

@@ -41,21 +41,22 @@ public class ScheduleLevels implements Runnable {
 
 
     public void createLevel(Date date_start, Date date_end, int approx, int zoom, String collectionName) {
-        List<Test> tests = new ArrayList<>();
+        // connessione al db
         DB db = new MongoClient().getDB("demo");
         Jongo jongo = new Jongo(db);
-        MongoCollection collection = jongo.getCollection("demo");
+        MongoCollection collection = jongo.getCollection("test");
         Iterator<Test> it;
 
+        // il livello 16 al momento non viene aggregato, ma msotra i dati originali, è possibile forzare l'aggregazione rimuovendo l'If
         if (zoom != 16) {
              it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
                 .and("{ $project : {lon_a: { $divide: [{ $trunc: { $multiply: ['$position.lon', "+approx+"]} }, "+approx+"]},lat_a: {$divide: [{$trunc: {$multiply: ['$position.lat', "+approx+"]}}, "+approx+"] }, lon : '$position.lon', lat: '$position.lat', leq: '$measurement.leq'}}")
                 .and("{$project : {_id: { $concat: [ { $toString: '$lon_a' } , '_' , { $toString: '$lat_a' } ] }, lon: 1,lat: 1, leq: 1}}")
                 .and("{$group : {_id: '$_id', lon: { $avg: '$lon' },lat: { $avg: '$lat' }, leq: { $avg: '$leq' }}}")
                 .and("{$project : {position: {lat: '$lat', lon: '$lon'},measurement: {leq: '$leq' },measureTimestamp: {date: #}}}", date_start)
-                .and("{$out: #}",collectionName).options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class);
+                .and("{$out: #}",collectionName).options(AggregationOptions.builder().allowDiskUse(false).build()).as(Test.class);
         } else { it = collection.aggregate("{$match: {measureTimestamp.date : {$gte: #, $lt: # }}}", date_start,date_end)
-                .and("{$out: #}",collectionName).options(AggregationOptions.builder().allowDiskUse(true).build()).as(Test.class);
+                .and("{$out: #}",collectionName).options(AggregationOptions.builder().allowDiskUse(false).build()).as(Test.class);
         }
     }
 
